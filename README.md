@@ -44,13 +44,13 @@ Victoria crime statistics. ABS population density is on the roadmap.
 ## Install
 
 ```bash
-pip install git+https://github.com/hashemHP/smart-street-lighting-lib.git
+pip install git+https://github.com/hashem59/smart-street-lighting-lib.git
 ```
 
 Pinned:
 
 ```bash
-pip install git+https://github.com/hashemHP/smart-street-lighting-lib.git@v0.1.0
+pip install git+https://github.com/hashem59/smart-street-lighting-lib.git@v0.1.0
 ```
 
 ## Quick use
@@ -87,7 +87,7 @@ a release asset so they can be re-versioned independently of the code:
 ```python
 import urllib.request
 urllib.request.urlretrieve(
-    "https://github.com/hashemHP/smart-street-lighting-lib/releases/download/v0.1.0/knowledge_base.zip",
+    "https://github.com/hashem59/smart-street-lighting-lib/releases/download/v0.1.0/knowledge_base.zip",
     "knowledge_base.zip",
 )
 ```
