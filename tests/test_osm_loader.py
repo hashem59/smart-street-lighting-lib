@@ -19,7 +19,7 @@ from smart_street_lighting.data.geometry import (
     _haversine,
 )
 from smart_street_lighting.data.osm_loader import resolve_pathway, geocode_nominatim, _slugify
-from smart_street_lighting.core.pipeline import bounds_from_osm_boundary
+from smart_street_lighting.data.geometry import bounds_from_osm_boundary
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 

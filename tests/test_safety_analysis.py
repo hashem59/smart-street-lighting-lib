@@ -1,5 +1,9 @@
 """
-Tests for crime/safety data integration and P-category adjustment.
+Tests for crime data loading and LGA lookups.
+
+The risk-scoring formula and P-category adjustment moved out of the
+plugin in v0.2.0 (they now live transparently in the submission
+notebook). The plugin keeps only the I/O surface tested here.
 """
 
 import sys
@@ -11,10 +15,8 @@ import pytest
 from smart_street_lighting.data.safety_analysis import (
     load_crime_data,
     get_lga_for_location,
-    calculate_safety_score,
-    adjust_p_category,
+    get_lga_with_fallback_info,
 )
-from smart_street_lighting.llm.calculation_engine import design_lighting
 
 
 # ============================================================
@@ -53,84 +55,11 @@ class TestLGALookup:
 
 
 # ============================================================
-# Safety score calculation
+# Fallback surfacing (S5-02 / item 11)
 # ============================================================
-
-class TestSafetyScore:
-    def test_score_range(self):
-        result = calculate_safety_score("Melbourne")
-        assert 0 <= result["safety_risk_score"] <= 10
-
-    def test_returns_required_fields(self):
-        result = calculate_safety_score("Melbourne")
-        assert "risk_category" in result
-        assert "p_category_adjustment" in result
-        assert "recommendation" in result
-        assert result["risk_category"] in ("low", "moderate", "high")
-
-    def test_unknown_lga_returns_default(self):
-        result = calculate_safety_score("NonexistentLGA")
-        assert result["safety_risk_score"] == 5.0
-        assert result["p_category_adjustment"] == 0
-
-    def test_high_crime_area_has_negative_adjustment(self):
-        """Yarra has higher crime rates, should get upgrade (negative adjustment)."""
-        result = calculate_safety_score("Yarra")
-        assert result["p_category_adjustment"] <= 0
-
-    def test_low_crime_area_has_zero_adjustment(self):
-        """Boroondara has lower crime rates, should have no upgrade."""
-        result = calculate_safety_score("Boroondara")
-        assert result["p_category_adjustment"] == 0
-
-
-# ============================================================
-# P-category adjustment
-# ============================================================
-
-class TestAdjustPCategory:
-    def test_upgrade_one_level(self):
-        assert adjust_p_category("P5", -1) == "P4"
-
-    def test_upgrade_two_levels(self):
-        assert adjust_p_category("P5", -2) == "P3"
-
-    def test_clamp_at_p1(self):
-        """Can't go below P1."""
-        assert adjust_p_category("P1", -1) == "P1"
-        assert adjust_p_category("P2", -3) == "P1"
-
-    def test_clamp_at_p12(self):
-        assert adjust_p_category("P12", 1) == "P12"
-
-    def test_no_adjustment(self):
-        assert adjust_p_category("P9", 0) == "P9"
-
-
-# ============================================================
-# Integration: safety adjustment in design_lighting
-# ============================================================
-
-class TestSafetyInDesignLighting:
-    def test_safety_adjustment_changes_category(self):
-        """Design with safety_adjustment=-1 should use a higher P-category."""
-        d_base = design_lighting("Test", 200, 3.0, "moderate", "park_path")
-        d_safe = design_lighting("Test", 200, 3.0, "moderate", "park_path", safety_adjustment=-1)
-
-        base_num = int(d_base.p_category.replace("P", ""))
-        safe_num = int(d_safe.p_category.replace("P", ""))
-        assert safe_num == base_num - 1
-
-    def test_safety_adjustment_clamped(self):
-        """Very high activity with large adjustment should clamp at P1."""
-        d = design_lighting("Test", 200, 3.0, "very_high", "shared_path", safety_adjustment=-5)
-        assert d.p_category == "P1"
-
-
-
 
 class TestFallbackSurfacing:
-    """S5-02 / item 11: silent fallbacks must surface fallback_used + fallback_reason."""
+    """Silent fallbacks must surface fallback_used + fallback_reason."""
 
     def test_known_location_no_fallback(self):
         info = get_lga_with_fallback_info("Fitzroy Gardens")
@@ -143,20 +72,10 @@ class TestFallbackSurfacing:
         assert "Melbourne" in info["lga_name"]
         assert "PARK_LGA_MAP" in info["fallback_reason"]
 
-    def test_safety_score_has_fallback_keys(self):
-        from smart_street_lighting.data.safety_analysis import calculate_safety_score
-        # Use a known LGA so we don't depend on which records exist
-        result = calculate_safety_score("Melbourne")
-        assert "fallback_used" in result
-        assert "fallback_reason" in result
-
     def test_get_lga_for_location_backcompat(self):
-        # The bare-string contract must still hold for back-compat
         assert isinstance(get_lga_for_location("Fitzroy Gardens"), str)
         assert get_lga_for_location("Some Unknown Park") == "Melbourne"
 
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-
-from smart_street_lighting.data.safety_analysis import get_lga_with_fallback_info

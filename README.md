@@ -70,12 +70,26 @@ print(design)
 
 ```
 smart_street_lighting/
-├── core/   config, intent classification, pipeline, validation
-├── data/   Melbourne Open Data loaders, spatial/temporal/safety analysis,
-│           OSM loader
+├── core/   config, logging, optional PostgreSQL chat persistence
+├── data/   Melbourne Open Data + OSM loaders, geometry helpers,
+│           crime CSV loader + LGA lookups (the I/O layer)
 ├── llm/    deterministic AS/NZS 1158 calculation engine
 └── rag/    ChromaDB ingestion + retrieval, LM Studio client
 ```
+
+## v0.2.0 reshape — algorithms vs plumbing
+
+As of v0.2.0, the plugin holds **plumbing**: data acquisition, RAG
+infrastructure, the AS/NZS 1158 calculation engine, and geometric
+helpers. The **algorithmic / data-science content** —
+spatial k-NN matching, temporal dimming schedule, safety risk
+scoring, intent classification, output validation, end-to-end
+orchestration — moved out of the plugin and into the capstone
+submission notebook, where it can be read directly by markers.
+
+Use the plugin for the heavy lifting (data fetch, OSM resolve,
+calculation engine, RAG retrieval); read the notebook for the
+analysis methodology.
 
 ## Knowledge base
 

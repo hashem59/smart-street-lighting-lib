@@ -12,6 +12,24 @@ from typing import Optional
 EARTH_RADIUS_M = 6_371_000
 
 
+def bounds_from_osm_boundary(
+    boundary: dict,
+) -> tuple[float, float, float, float] | None:
+    """
+    Extract a (lat_min, lat_max, lon_min, lon_max) bounding box from a
+    GeoJSON Polygon returned by the OSM loader.
+
+    Returns None if the boundary is missing or malformed.
+    """
+    try:
+        ring = boundary["coordinates"][0]  # outer ring: [[lon, lat], ...]
+        lats = [pt[1] for pt in ring]
+        lons = [pt[0] for pt in ring]
+        return (min(lats), max(lats), min(lons), max(lons))
+    except (KeyError, IndexError, TypeError):
+        return None
+
+
 def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Return the great-circle distance in metres between two lat/lon points."""
     lat1, lon1, lat2, lon2 = map(math.radians, (lat1, lon1, lat2, lon2))

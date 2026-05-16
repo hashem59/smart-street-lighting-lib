@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "smart-street-lighting"
-version = "0.1.0"
+version = "0.2.0"
 description = "AI-powered street lighting design for Melbourne (Deakin SIT764 capstone)"
 readme = "README.md"
 license = { text = "MIT" }
